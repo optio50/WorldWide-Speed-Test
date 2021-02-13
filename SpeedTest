@@ -1,0 +1,956 @@
+#!/bin/bash
+
+###############################################################
+dlreport='DL-Report.txt'
+preport='Ping-Report.txt'
+mtrreport='MTR-Report'
+###############################################################
+
+ rmlog() {
+if  [ -f "logfile1" ]
+then
+rm logfile1
+fi
+
+if  [ -f "logfile2" ]
+then
+rm logfile2
+fi
+
+if  [ -f "logfile3" ]
+then
+rm logfile3
+fi
+
+if  [ -f ${dlreport} ]
+then
+rm ${dlreport}
+fi
+
+if  [ -f ${preport} ]
+then
+rm ${preport}
+fi
+
+}
+
+###############################################################
+
+ Banner() {
+	
+	printf "%b" ${red} "https://github.com/optio50/\n"
+	printf "%b" ${purple} # Colored Banner Text
+	command cat <<"EOF"
+ __        __         _     _  __        ___     _      
+ \ \      / /__  _ __| | __| | \ \      / (_) __| | ___ 
+  \ \ /\ / / _ \| '__| |/ _` |  \ \ /\ / /| |/ _` |/ _ \
+   \ V  V / (_) | |  | | (_| |   \ V  V / | | (_| |  __/
+    \_/\_/ \___/|_|  |_|\__,_|    \_/\_/  |_|\__,_|\___|
+		 _ 
+		| \ _    _ | _  _  _|
+		|_/(_)VV| ||(_)(_|(_|
+	       And Network Diagnostics                                                                 
+EOF
+printf "%b" ${red}
+command cat <<"EOF"
+   _____ ____  ________________     _______________________
+  / ___// __ \/ ____/ ____/ __ \   /_  __/ ____/ ___/_  __/
+  \__ \/ /_/ / __/ / __/ / / / /    / / / __/  \__ \ / /   
+ ___/ / ____/ /___/ /___/ /_/ /    / / / /___ ___/ // /    
+/____/_/   /_____/_____/_____/    /_/ /_____//____//_/     
+
+EOF
+    printf "%b" ${reset} # Reset Terminal Colors
+    printf "%b\n"
+
+}
+
+###############################################################
+
+# Setup Colors
+
+black=$(tput setaf 16)
+white=$(tput setaf 15)
+gray=$(tput setaf 240)
+blue=$(tput setaf 21)
+green=$(tput setaf 28)
+red=$(tput setaf 1)
+cyan=$(tput setaf 36)
+purple=$(tput setaf 128)
+brown=$(tput setaf 130)
+yellow=$(tput setaf 226)
+orange=$(tput setaf 202)
+pink=$(tput setaf 207)
+lgray=$(tput setaf 246)
+lblue=$(tput setaf 39)
+lgreen=$(tput setaf 118)
+lred=$(tput setaf 9)
+lcyan=$(tput setaf 14)
+lpurple=$(tput setaf 99)
+blgray=$(tput setab 246) # Background Light Gray
+
+BoGreen=$(tput bold; tput setaf 28) # Bold Green
+ReverseGR=$(tput setaf 28; tput rev) 	# Reverse Green
+invis=$(tput civis)			# Invisible Cursor
+norm=$(tput cnorm)			# Normal Cursor
+standout=$(tput smso)
+blink=$(tput blink)
+reverse=$(tput rev)
+bold=$(tput bold) 
+reset=$(tput sgr0)      #  Reset text attributes to normal
+
+############################################################### 
+
+# Colored-echo
+
+ cecho () { 
+	message=$1
+	color=$2
+	printf "%b" "$color$message ${reset}\n"
+return
+}
+
+###############################################################
+
+# Divider
+
+ divider() {
+	cecho "--------------------------------------------------------------------------------------------" ${orange}
+}
+
+###############################################################
+
+# Spacer
+
+ spacer() {
+	printf "%b\n"
+}
+
+###############################################################
+
+# Reposition Cursor
+
+ position() {
+	tput cup 17 0 # Move cursor to line 16 column 0
+    tput ed # Clear all text below cursor
+}
+
+###############################################################
+
+ Main_Menu() {
+	
+	position
+	
+    RUN_BANDWIDTHBENCH=Y
+    printf ${brown} "%b"
+    command cat <<"EOF"
+
+
+
+Select Download Location
+------------------------------------------------------------------------------             
+ 1. Single Test		"ANYCAST" Server. Recommended Download File Size is 100 MB
+
+ 2. All Locations 	 42 Locations World Wide 
+
+ 3. USA 		 8 Locations with 12 Optional 10gbps.io & Vultr Servers 
+
+ 4. ASIA 		 3 Locations with 1 Optional Vultr Server 
+
+ 5. EUROPE 		 3 Locations with 10 Optional 10gbps.io & Vultr Servers 
+
+ 6. AUSTRALIA 		 4 Locations with 1 Optional Vultr Server 
+------------------------------------------------------------------------------
+EOF
+printf ${red} "%b"
+command cat <<"EOF"
+Network Diagnostics
+------------------------------------------------------------------------------
+ 7. Ping Tests 		 24 Locations World Wide 
+
+ 8. MTR Tests		 34 Locations (Traceroute & Ping combo tool)
+------------------------------------------------------------------------------
+EOF
+printf ${reset} "%b"
+printf "%b\n" " 9. Exit"
+printf "%b" ${invis}
+        
+        read -r -n 1 option # Wait and read menu selection then continue with a single key press
+        
+        
+
+    case "${option}" in
+        
+        1)	CACHFLY_SINGLE=Y
+			prompts
+			;;
+        
+        2)
+            TENGB_BANDWIDTHTESTS=Y 		# 10gbps.io ** Additional Tests **
+
+			RUN_VULTRTESTS=Y			# Vultr.com ** Additional Tests **
+
+			USA_BANDWIDTHTESTS=Y		# Linode, Leaseweb, SoftLayer, VersaWeb
+
+			ASIA_BANDWIDTHTESTS=Y		# Linode, SoftLayer
+
+			EUROPE_BANDWIDTHTESTS=Y 	# Linode, OVH, SmartDC
+
+			AUSTRALIA_BANDWIDTHTESTS=Y	# Vultr, Internode, Digital Pacific
+			
+			prompts
+			;;
+        3)
+            USA_BANDWIDTHTESTS=Y
+            
+            prompts
+            ;;
+        4)
+            ASIA_BANDWIDTHTESTS=Y
+            prompts
+            ;;
+        5)
+            EUROPE_BANDWIDTHTESTS=Y
+            prompts
+            ;;
+        6)
+            AUSTRALIA_BANDWIDTHTESTS=Y
+            prompts
+            ;;
+        7)
+			RUN_PINGTESTS=Y
+            pingtests
+            ;;
+        8)
+			mtrtests
+			
+			;;
+        
+        *)
+            
+            tput cnorm
+            tput el1
+			printf "%b\n"
+            exit
+            ;;
+        
+    esac
+}
+
+###############################################################
+
+ prompts() {
+	
+	position
+	
+printf "%b" ${lblue}
+
+command cat <<"EOF"
+
+How Many MegaBytes to Download from each Server Location?
+
+Valid Values are any number Equal to or Less Than 100. 
+
+The Larger the Number the More Accurate the Results.
+
+Suggest 20 or Higher.
+
+Input Value and Press Enter.
+
+EOF
+    printf "%b" ${norm}${reset}
+    read -r -p "How Many MB's? " # Wait and read File Size
+    Size=${REPLY}
+    
+    # While NOT True
+    while ! [[ (( ${REPLY} -ge 1 && ${REPLY} -le 100 )) ]];
+     do
+	printf "%b\n" ${red} "Invalid Input, ${reset} Must be a Number between 1-100"
+	spacer
+	read -r -p "How Many MB's? " # Wait and read File Size
+	Size=${REPLY};
+     done
+    
+	position
+	
+	if [[ "$CACHFLY_SINGLE" = [yY] ]]; then
+	single
+	else
+	
+printf "%b" ${lpurple}
+command cat <<"EOF"
+
+Include the Additional 10gbps.io & Vultr Servers?
+
+
+EOF
+    printf "%b" ${reset}
+    tput cvvis
+    read -r -n 1 -p "[Y/N] " yn
+    case $yn in
+        [Yy]* ) 
+			TENGB_BANDWIDTHTESTS=Y
+			RUN_VULTRTESTS=Y
+        ;;
+        [Nn]* )
+			TENGB_BANDWIDTHTESTS=N
+			RUN_VULTRTESTS=N
+        ;;
+        * ) Main_Menu;;
+    esac
+    printf "%b" ${reset}
+    
+    position
+  
+    
+bandwidthbench
+fi
+}
+###############################################################
+
+
+ log() {
+	printf '%b' "$@" >> ${dlreport}
+	#printf '%b\n'
+	}
+
+###############################################################
+
+ download_benchmark() {  
+	printf '%b\n' "Download from $1:" | sed "s/:/ /g"
+	log "$(printf "%-55s" "Download from ${1}:")"
+	log "$(printf "%-10s" "(${Size} MB):")"
+	printf "%b" "${reset}"
+	DOWNLOAD_SPEED=$(printf "%b" "scale=2; " && curl --progress-bar --connect-timeout 10 -o /dev/null -r 0-"$Size"000000 "$2" -w "%{speed_download}"  | sed "s/\,/\./g" && printf "%b\n" "/1048576");
+	tput cuu 2; tput ed;
+	printf ${gray}
+	log "$(printf "%b\n"  "${DOWNLOAD_SPEED}" | bc -q | sed "s/$/ MB\/sec/;s/^/Download Speed\; /";)\n"
+	tail -n1 ${dlreport} | sed "s/:/ /g" | sed "s/;/:/g"
+	#tput cuu 1; tput dl 1;
+	}
+
+###############################################################
+
+ single() {
+	divider
+	download_benchmark 'Cachefly (Reference Server)' 'http://cachefly.cachefly.net/100mb.test'
+	printf "%b" "${reset}"
+	divider
+	spacer
+ printf "%b" " Cachefly is an \"ANYCAST\" CDN. This technology automatically picks the closet server to you
+ and as a result, barring any problems or excessive location distance, is almost always the fastet server
+ your connection can receive.\n
+
+ For accurate results recommended download file size is 100 MB.\n\n"
+
+tput setaf 19
+
+command cat <<"EOF"
+ https://www.cachefly.com/network-map
+ https://en.wikipedia.org/wiki/Anycast
+ https://www.cachefly.com/anycast-think-before-you-talk-part-i/
+EOF
+printf ${reset} 
+rmlog	 
+	}
+
+###############################################################
+
+bandwidthbench() {
+	
+if  [ -f ${dlreport} ]
+then
+rm ${dlreport}
+fi
+	
+rmlog
+	if [ ! -x /usr/bin/curl ] ; then
+                                                                              
+    command -v curl >/dev/null 2>&1 || { printf "%b\n" ${red} "Program "Curl" required but not found. \nPlease install "Curl" or set it in your path.";printf "%b" ${reset}; exit 1; }
+	fi
+	
+	
+	if [[ "$RUN_BANDWIDTHBENCH" = [yY] ]]; then
+	tput sgr0
+	spacer
+	divider
+	cecho "Measuring Reference Server..." ${ReverseGR} 
+	divider
+	
+		
+		download_benchmark 'Cachefly (Reference Server): :  ' 'http://cachefly.cachefly.net/100mb.test'
+		
+				
+		if [[ "$USA_BANDWIDTHTESTS" = [yY] ]]; then
+		
+		cecho "--------------------------------------------------------------------------------------------" ${orange}
+		cecho "USA Bandwidth Tests..." ${BoGreen}
+		cecho "--------------------------------------------------------------------------------------------" ${orange}
+			download_benchmark 'Linode Atlanta: GA: USA' 'http://speedtest.atlanta.linode.com/100MB-atlanta.bin'
+			divider
+			download_benchmark 'Linode Dallas: TX: USA' 'http://speedtest.dallas.linode.com/100MB-dallas.bin'
+			divider
+			download_benchmark 'Leaseweb Manassas: VA: USA' 'http://mirror.us.leaseweb.net/speedtest/100mb.bin'
+			divider
+			download_benchmark 'Leaseweb San Francisco: CA: USA' 'http://mirror.sfo12.us.leaseweb.net/speedtest/100mb.bin'
+			divider
+			download_benchmark 'Softlayer Seattle: WA: USA' 'http://speedtest.sea01.softlayer.com/downloads/test100.zip'
+			divider
+			download_benchmark 'Softlayer San Jose: CA: USA' 'http://speedtest.sjc01.softlayer.com/downloads/test100.zip'
+			divider
+			download_benchmark 'Softlayer Washington: DC: USA' 'http://speedtest.wdc01.softlayer.com/downloads/test100.zip'
+			divider
+			download_benchmark 'VersaWeb Las Vegas: NV: USA' 'http://lg.las1.as53340.net/100MB.test'
+		
+				
+			if [[ "$RUN_VULTRTESTS" = [yY] ]]; then
+			divider	
+			download_benchmark 'Vultr Los Angeles: CA: USA' 'http://lax-ca-us-ping.vultr.com/vultr.com.100MB.bin'
+			divider
+			download_benchmark 'Vultr Seattle: WA: USA' 'http://wa-us-ping.vultr.com/vultr.com.100MB.bin'
+			divider
+			download_benchmark 'Vultr Dallas: TX: USA' 'http://tx-us-ping.vultr.com/vultr.com.100MB.bin'
+			divider
+			download_benchmark 'Vultr Chicago: IL: USA' 'http://il-us-ping.vultr.com/vultr.com.100MB.bin'
+			divider
+			download_benchmark 'Vultr Atlanta: GA: USA' 'http://ga-us-ping.vultr.com/vultr.com.100MB.bin'
+			divider
+			download_benchmark 'Vultr Miami: FL: USA' 'http://fl-us-ping.vultr.com/vultr.com.100MB.bin'
+			divider
+			download_benchmark 'Vultr Piscataway: NJ: USA' 'http://nj-us-ping.vultr.com/vultr.com.100MB.bin'
+			fi
+			if [[ "$TENGB_BANDWIDTHTESTS" = [yY] ]]; then
+			divider
+			download_benchmark '10gbps.io Atlanta: GA: USA' 'http://atl.download.10gbps.io/100mb.bin'
+			divider
+			download_benchmark '10gbps.io Chicago: IL: USA' 'http://chi.download.10gbps.io/100mb.bin'
+			divider
+			download_benchmark '10gbps.io Los Angeles: CA: USA' 'http://lax.download.10gbps.io/100mb.bin'
+			divider
+			download_benchmark '10gbps.io New York: NY: USA' 'http://nyc.download.10gbps.io/100mb.bin'
+			
+			fi
+		fi
+
+		if [[ "$ASIA_BANDWIDTHTESTS" = [yY] ]]; then
+		
+		cecho "----------------------------------------------" ${orange}
+		cecho "Asia Bandwidth Tests..."  ${BoGreen}
+		cecho "----------------------------------------------" ${orange}
+		
+		download_benchmark 'Linode: Tokyo: JP' 'http://speedtest.tokyo2.linode.com/100MB-tokyo2.bin'
+		divider
+		download_benchmark 'Softlayer: Singapore: SG' 'http://speedtest.sng01.softlayer.com/downloads/test100.zip'
+		divider	
+		download_benchmark 'Smart Server: South Korea: KR' 'http://kr-sl-smart.serverlocation.co:82/1Gio.dat'
+		divider	
+			if [[ "$RUN_VULTRTESTS" = [yY] ]]; then
+			download_benchmark 'Vultr: Tokyo: JP' 'http://hnd-jp-ping.vultr.com/vultr.com.100MB.bin'
+			
+			fi
+		fi
+		
+		if [[ "$EUROPE_BANDWIDTHTESTS" = [yY] ]]; then
+		
+		cecho "----------------------------------------------" ${orange}
+		cecho "Europe Bandwidth Tests..."  ${BoGreen}
+		cecho "----------------------------------------------" ${orange}
+		
+		download_benchmark 'Linode: London: UK' 'http://speedtest.london.linode.com/100MB-london.bin'
+		divider
+		download_benchmark 'OVH: Paris: FR' 'http://proof.ovh.net/files/100Mio.dat'
+		divider
+		download_benchmark 'SmartDC: Rotterdam: NL' 'http://mirror.i3d.net/100mb.bin'
+		divider	
+			if [[ "$RUN_VULTRTESTS" = [yY] ]]; then
+			download_benchmark 'Vultr: Amsterdam: NL' 'http://ams-nl-ping.vultr.com/vultr.com.100MB.bin'
+			divider
+			download_benchmark 'Vultr: London: UK' 'http://lon-gb-ping.vultr.com/vultr.com.100MB.bin'
+			divider
+			download_benchmark 'Vultr: Paris: FR' 'http://par-fr-ping.vultr.com/vultr.com.100MB.bin'
+			fi
+			if [[ "$TENGB_BANDWIDTHTESTS" = [yY] ]]; then
+			divider
+			download_benchmark '10gbps.io: Amsterdam: NL' 'http://ams.download.10gbps.io/100mb.bin'
+			divider
+			download_benchmark '10gbps.io: Frankfurt: DE' 'http://fra.download.10gbps.io/100mb.bin'
+			divider
+			download_benchmark '10gbps.io: London: UK' 'http://lon.download.10gbps.io/100mb.bin'
+			divider
+			download_benchmark '10gbps.io: Madrid: ES' 'http://mad.download.10gbps.io/100mb.bin'
+			divider
+			download_benchmark '10gbps.io: Prague: CZ' 'http://prg.download.10gbps.io/100mb.bin'
+			divider
+			download_benchmark '10gbps.io: Vienna: AT' 'http://vie.download.10gbps.io/100mb.bin'
+			divider
+			download_benchmark '10gbps.io: Stockholm: SE' 'http://sto.download.10gbps.io/100mb.bin'
+			
+			fi
+		fi
+			
+		if [[ "$AUSTRALIA_BANDWIDTHTESTS" = [yY] ]]; then
+		
+		cecho "----------------------------------------------" ${orange}
+		cecho "Australia Bandwidth Tests..."  ${BoGreen}
+		cecho "----------------------------------------------" ${orange}
+		
+			download_benchmark 'Internode: Adelaide: AU' 'http://mirror.filearena.net/pub/speed/SpeedTest_128MB.dat'
+			divider
+			download_benchmark 'Internode: Sydney: AU' 'http://speedcheck.cdn.on.net/100meg.test'
+			divider
+			download_benchmark 'Digital Pacific: Sydney: AU' 'http://speedtest.mirror.digitalpacific.com.au/test1000MB.dat'
+			divider
+			download_benchmark 'Smart Server: Sydney: AU' 'http://au-sy.serverlocation.co:82/1Gio.dat'
+			divider
+			if [[ "$RUN_VULTRTESTS" = [yY] ]]; then
+			divider
+			download_benchmark 'Vultr: Sydney: AU' 'http://syd-au-ping.vultr.com/vultr.com.100MB.bin'
+			
+			fi
+		fi
+			
+	fi
+	tput clear
+	Banner
+	position
+	cecho "--------------------------------------------------------------------------------------------" ${orange}
+	cat "${dlreport}" | cut -f3- -d ' ' | sed -e "s/[[:space:]]\+/ /g" | column -t -s':' | sort -n -t ";" -k 2 -r | sed "s/;/:/g" > "${dlreport}"
+	printf "%b" ${lpurple}
+	cat "${dlreport}"
+	printf "%b\n" ${reset}${norm}
+	
+	
+if  [ -f "${dlreport}" ]
+then
+NewDLReport=DL-Report-$(date -d "today" +"%Y-%d-%b-%H:%M").txt
+printf "%b\n" "\n${NewDLReport}\n" >> "${dlreport}"
+mv "${dlreport}" "${NewDLReport}"
+printf "%b" "Report saved to  "${NewDLReport}"\n\n"
+ 
+fi
+rmlog
+
+}
+###############################################################
+
+ping_benchmark() { 
+	printf "%b\n" ${bold}${red} 
+	printf '%-35s %-0s %-25s' "${1}" ${purple} "${2}" | tee logfile1
+	printf "%b" ${bold}${blue} "${3}"
+	printf "%b\n" ${bold}${gray}
+	ping -c 4 ${2} | grep --line-buffered -E "(time=)|(avg)|(\/[0-9]{1,3}\.[0-9]{1,3}\/)" | tee logfile2
+	grep --color -o -E "(avg)|(\/[0-9]{1,3}\.[0-9]{1,3}\/)" logfile2 | tr -d "\n" >> logfile1; printf "%b\n" >> logfile1
+	position
+	#printf "%b\n" ${reset}${norm}
+	cat logfile1 | tr '/' ' ' | sed "s/avg/AVG:/g" >> logfile3
+	
+}
+
+###############################################################
+
+pingtests() {
+
+if  [ -f ${preport} ]
+then
+rm ${preport}
+fi
+	
+rmlog
+	
+	position
+	   
+	if [[ "$RUN_PINGTESTS" = [yY] ]]; then
+#spacer
+#	cecho "---------------------" ${orange}
+#	cecho "Running Ping Tests..." ${BoGreen}
+#	cecho "---------------------" ${orange}
+
+	
+#printf "%b\n"
+divider
+ping_benchmark 'Ping Cachefly.net' 'cachefly.cachefly.net' ' 1 of 24'
+divider
+ping_benchmark 'Ping Japan Vultr' 'hnd-jp-ping.vultr.com' ' 2 of 24'
+divider
+ping_benchmark 'Ping Los Angeles CA USA Vultr' 'lax-ca-us-ping.vultr.com' ' 3 of 24'
+divider
+ping_benchmark 'Ping Sydney AU Vultr' 'syd-au-ping.vultr.com' ' 4 of 24'
+divider
+ping_benchmark 'Ping Washington USA Vultr' 'wa-us-ping.vultr.com' ' 5 of 24'
+divider
+ping_benchmark 'Ping Texas USA Vultr' 'tx-us-ping.vultr.com' ' 6 of 24'
+divider
+ping_benchmark 'Ping Illinois USA Vultr' 'il-us-ping.vultr.com' ' 7 of 24'
+divider
+ping_benchmark 'Ping Georgia USA Vultr' 'ga-us-ping.vultr.com' ' 8 of 24'
+divider
+ping_benchmark 'Ping Florida USA Vultr' 'fl-us-ping.vultr.com' ' 9 of 24'
+divider
+ping_benchmark 'Ping New Jersey USA Vultr' 'nj-us-ping.vultr.com' ' 10 of 24'
+divider
+ping_benchmark 'Ping Frankfurt Germany Vultr' 'fra-de-ping.vultr.com' ' 11 of 24'
+divider
+ping_benchmark 'Ping Amsterdam NL Vultr' 'ams-nl-ping.vultr.com' ' 12 of 24'
+divider
+ping_benchmark 'Ping London England UK Vultr' 'lon-gb-ping.vultr.com' ' 13 of 24'
+divider
+ping_benchmark 'Ping Paris FR Vultr' 'par-fr-ping.vultr.com' ' 14 of 24'
+divider
+ping_benchmark 'Ping Las Vegas NV USA VersaWeb' '76.164.201.61' ' 15 of 24'
+divider
+ping_benchmark 'Ping Seattle WA USA VersaWeb' '76.164.234.1' ' 16 of 24'
+divider
+ping_benchmark 'Ping Montreal Canada OVH' 'bhs.proof.ovh.net' ' 17 of 24'
+divider
+ping_benchmark 'Ping Frankfurt Germany 10gbps.io' '195.181.174.20' ' 18 of 24'
+divider
+ping_benchmark 'Ping London England UK 10gbps.io' '185.59.221.20' ' 19 of 24'
+divider
+ping_benchmark 'Ping Paris FR 10gbps.io' '185.93.2.193' ' 20 of 24'
+divider
+ping_benchmark 'Ping Singapore 10gbps.io' '203.174.85.10' ' 21 of 24'
+divider
+ping_benchmark 'Ping Stockholm SE 10gbps.io' '185.76.9.10' ' 22 of 24'
+divider
+ping_benchmark 'Ping Moscow Russia 10gbps.io' '87.245.204.20' ' 23 of 24'
+divider
+ping_benchmark 'Ping Miami Florida USA 10gbps.io' '195.181.162.195' ' 24 of 24'
+
+
+printf "%b""            Ping Test Results Sorted by Time"
+printf "%b\n" ${brown} "#####################################################################"
+printf "%b" ${reset}
+printf "%b" ${bold}
+cat logfile3 | cut -d ' ' -f2- | sed -n '/AVG:/p' | sort -n -t ":" -k2 | column -t -s $'\t' > "${preport}"
+printf "%b\n" ${brown}
+sed -i -r "s/\x1B(\[[0-9;]*[JKmsu]|\(B)//g" "${preport}"	# Strip the tput color codes from logfile
+cat ${preport}
+printf "%b\n" ${reset}${norm}
+
+if  [ -f "${preport}" ]
+then
+NewPingReport=Ping-Report-$(date -d "today" +"%Y-%d-%b-%H:%M").txt
+printf "%b\n" "\n${NewPingReport}\n" >> "${preport}"
+mv "${preport}" "${NewPingReport}"
+printf "%b\n" "Report saved to  "${NewPingReport}""
+ 
+fi
+
+printf "%b" ${norm}${reset}
+printf "%b\n"
+
+rmlog
+fi
+
+
+}
+
+###############################################################
+
+mtrtests() {
+	
+	if  [ -f ${mtrreport} ]
+then
+rm ${mtrreport}
+fi
+	
+	if [ ! -x /usr/bin/mtr ] ; then
+                                                                              
+    command -v mtr >/dev/null 2>&1 || { printf "%b\n" ${red} "Program "mtr" required but not found. \nPlease install "mtr" or "mtr-tiny" or set it in your path.";printf "%b" ${reset}; exit 1; }
+	fi
+	
+	position
+	printf "%b\n"
+	printf "%b\n" "mtr combines the functionality of the traceroute and ping programs
+in a single network diagnostic tool.\n
+
+As mtr starts, it investigates the network connection between the host mtr runs on
+and HOSTNAME by sending packets with purposely low TTLs. It continues to send packets
+with low TTL, noting the response time of the intervening routers. This allows mtr
+to print the response percentage and response times of the internet route to HOSTNAME.
+A sudden increase in packet loss or response time is often an indication of a
+bad (or simply overloaded) link.
+
+The results are usually reported as round-trip-response times in milliseconds and the
+percentage of packet‐loss.\n\n"
+	read -r -n 1 -p "This test takes about 30 seconds per location (34)
+	   Any key to continue"
+	
+	position
+	spacer
+	cecho "--------------------" ${BoGreen}
+	cecho "Running MTR Tests..." ${orange}
+	cecho "--------------------" ${BoGreen}
+
+	spacer
+	divider
+	cecho "cachefly.cachefly.net" "${red}" | tee "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 1 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  cachefly.cachefly.net | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+    spacer
+	divider
+	cecho "speedtest.atlanta.linode.com" "${red}" | tee -a "${mtrreport}"
+    printf "%b" ${bold}${blue} "Test 2 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  speedtest.atlanta.linode.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"    
+    spacer
+    divider
+    cecho "speedtest.dallas.linode.com" "${red}" | tee -a "${mtrreport}"
+    printf "%b" ${bold}${blue} "Test 3 of 34\n" | tee -a "${mtrreport}"
+    printf "%b\n" ${gray}
+    mtr --report -w 200  speedtest.dallas.linode.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"    
+    spacer
+    divider
+    cecho "mirror.us.leaseweb.net" "${red}" | tee -a "${mtrreport}"
+    printf "%b" ${bold}${blue} "Test 4 of 34\n" | tee -a "${mtrreport}"
+    printf "%b\n" ${gray}
+    mtr --report -w 200  mirror.us.leaseweb.net | tee -a "${mtrreport}"
+divider >> "${mtrreport}"    
+    spacer
+    divider
+    cecho "speedtest.sea01.softlayer.com" "${red}" | tee -a "${mtrreport}"
+    printf "%b" ${bold}${blue} "Test 5 of 34\n" | tee -a "${mtrreport}"
+    printf "%b\n" ${gray}
+    mtr --report -w 200  speedtest.sea01.softlayer.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"   
+    spacer
+    divider
+    cecho "speedtest.sjc01.softlayer.com" "${red}" | tee -a "${mtrreport}"
+    printf "%b" ${bold}${blue} "Test 6 of 34\n" | tee -a "${mtrreport}"
+    printf "%b\n" ${gray}
+    mtr --report -w 200  speedtest.sjc01.softlayer.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"    
+    spacer
+    divider
+    cecho "speedtest.wdc01.softlayer.com" "${red}" | tee -a "${mtrreport}"
+    printf "%b" ${bold}${blue} "Test 7 of 34\n" | tee -a "${mtrreport}"
+    printf "%b\n" ${gray}
+    mtr --report -w 200  speedtest.wdc01.softlayer.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"    
+    spacer
+    divider
+    cecho "speedtest.tokyo2.linode.com" "${red}" | tee -a "${mtrreport}"
+    printf "%b" ${bold}${blue} "Test 8 of 34\n" | tee -a "${mtrreport}"
+    printf "%b\n" ${gray}
+    mtr --report -w 200  speedtest.tokyo2.linode.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"    
+    spacer
+    divider
+    cecho "speedtest.sng01.softlayer.com" "${red}" | tee -a "${mtrreport}"
+    printf "%b" ${bold}${blue} "Test 9 of 34\n" | tee -a "${mtrreport}"
+    printf "%b\n" ${gray}
+    mtr --report -w 200  speedtest.sng01.softlayer.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"    
+    spacer
+    divider
+    cecho "speedtest.london.linode.com" "${red}" | tee -a "${mtrreport}"
+    printf "%b" ${bold}${blue} "Test 10 of 34\n" | tee -a "${mtrreport}"
+    printf "%b\n" ${gray}
+    mtr --report -w 200  speedtest.london.linode.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"    
+    spacer
+    divider
+    cecho "mirror.i3d.net" "${red}" | tee -a "${mtrreport}"
+    printf "%b" ${bold}${blue} "Test 11 of 34\n"| tee -a "${mtrreport}"
+    printf "%b\n" ${gray}
+    mtr --report -w 200  mirror.i3d.net | tee -a "${mtrreport}"
+divider >> "${mtrreport}"    
+	spacer
+	divider
+	cecho "syd-au-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 12 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  syd-au-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "hnd-jp-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 13 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  hnd-jp-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "lax-ca-us-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 14 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  lax-ca-us-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "wa-us-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 15 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  wa-us-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "tx-us-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 16 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  tx-us-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "il-us-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 17 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  il-us-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "ga-us-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 18 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  ga-us-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "fl-us-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 19 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  fl-us-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "nj-us-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 20 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  nj-us-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "fra-de-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 21 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  fra-de-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "ams-nl-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 22 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  ams-nl-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "lon-gb-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 23 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  lon-gb-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "par-fr-ping.vultr.com" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 24 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  par-fr-ping.vultr.com | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "VersaWeb Las Vegas" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 25 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  104.143.15.254 | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "VersaWeb Seattle" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 26 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  76.164.234.1 | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "OVH Canada" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 27 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  bhs.proof.ovh.net | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "10gbps.io Frankfurt:" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 28 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  195.181.174.20 | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "10gbps.io London:" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 29 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  185.59.221.20 | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "10gbps.io Paris:" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 30 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  185.93.2.193 | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "10gbps.io Singapore:" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 31 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  203.174.85.38 | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "10gbps.io Stockholm:" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 32 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  185.76.9.10 | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "10gbps.io Moscow:" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 33 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  87.245.204.20 | tee -a "${mtrreport}"
+divider >> "${mtrreport}"
+	spacer
+	divider
+	cecho "10gbps.io Miami:" "${red}" | tee -a "${mtrreport}"
+	printf "%b" ${bold}${blue} "Test 34 of 34\n" | tee -a "${mtrreport}"
+	printf "%b\n" ${gray}
+	mtr --report -w 200  195.181.162.195 | tee -a "${mtrreport}"
+sed -i -r "s/\x1B(\[[0-9;]*[JKmsu]|\(B)//g" "${mtrreport}"	# Strip the tput color codes from logfile
+
+if  [ -f "${mtrreport}" ]
+then
+NewMTRReport=MTR-Report-$(date -d "today" +"%Y-%d-%b-%H:%M").txt
+printf "%b\n" "\n${NewMTRReport}\n" >> "${mtrreport}"
+mv "${mtrreport}" "${NewMTRReport}"
+printf "%b\n"
+printf "%b\n" "Report saved to  ${NewMTRReport}"
+printf "%b\n" ${reset}${norm}
+fi
+printf "%b\n" ${reset}${norm}
+
+}
+
+###############################################################
+
+if  
+[ $# -eq 0 ]; then
+trap ' ' INT # If event (download) hangs Ctrl-C to skip to next event (download)
+rmlog
+printf "%b" ${norm}${reset}
+tput clear
+Banner
+Main_Menu
+elif
+[[ ! (( "$1" -ge 1 && "$1" -le 100 )) ]]; then
+printf "%b\n" ${red} "Invalid MB Value, ${reset} Must be a Number between 1-100\n"
+elif
+[[ (( "$1" -ge 1 && "$1" -le 100 )) ]]; then # Quick single location speed test with scriptname and one argument (a value of 1 to 100)
+Size="$1"
+single
+fi
+
+
